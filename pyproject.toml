@@ -1,0 +1,11 @@
+[project]
+name = "uzmarket-intelligence-agent"
+version = "1.0.0"
+description = "Autonomous multi-marketplace product search agent for Uzbekistan e-commerce"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+log_cli = true
+log_cli_level = "WARNING"

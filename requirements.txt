@@ -1,0 +1,16 @@
+# Core
+pydantic==2.12.5
+python-dotenv==1.2.1
+
+# LLM (OpenAI-compatible SDK — used for xAI Grok API)
+openai==2.17.0
+
+# Web Scraping
+playwright==1.58.0
+
+# UI
+streamlit==1.54.0
+
+# Testing
+pytest==9.0.2
+pytest-asyncio==1.3.0
