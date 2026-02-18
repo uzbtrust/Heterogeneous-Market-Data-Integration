@@ -34,6 +34,10 @@ class Settings:
     MAX_CONCURRENT_SCRAPERS: int = int(os.getenv("MAX_CONCURRENT_SCRAPERS", "3"))
     LLM_CONCURRENCY_LIMIT: int = int(os.getenv("LLM_CONCURRENCY_LIMIT", "10"))
 
+    # Cache
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    CACHE_TTL_SECONDS: int = int(os.getenv("CACHE_TTL_SECONDS", "3600"))
+
     # UI
     APP_TITLE: str = "UzMarket Intelligence Agent"
     APP_SUBTITLE: str = "Autonomous Multi-Marketplace Product Search"
