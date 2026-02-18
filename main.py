@@ -16,7 +16,7 @@ logging.basicConfig(
 logger: logging.Logger = logging.getLogger("main")
 
 
-def _run_cli(query: str) -> None:
+def _run_cli(query: str, no_cache: bool = False) -> None:
     from agents.master import MasterAgent
     from core.models import AgentResult
     from core.reasoning import ReasoningEngine
@@ -25,7 +25,7 @@ def _run_cli(query: str) -> None:
     agent: MasterAgent = MasterAgent(reasoning_engine=engine)
 
     logger.info("Starting search for: '%s'", query)
-    result: AgentResult = asyncio.run(agent.run(query))
+    result: AgentResult = asyncio.run(agent.run(query, no_cache=no_cache))
 
     logger.info("=" * 60)
     logger.info("SEARCH RESULTS")
@@ -92,13 +92,18 @@ def main() -> None:
         action="store_true",
         help="Launch Streamlit web interface",
     )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Disable caching, force fresh scraping",
+    )
 
     args: argparse.Namespace = parser.parse_args()
 
     if args.ui:
         _run_ui()
     elif args.query:
-        _run_cli(args.query)
+        _run_cli(args.query, no_cache=args.no_cache)
     else:
         parser.print_help()
         logger.info("Examples:")
