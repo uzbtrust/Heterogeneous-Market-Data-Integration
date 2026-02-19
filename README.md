@@ -6,6 +6,7 @@
 [![Playwright](https://img.shields.io/badge/Scraping-Playwright-2EAD33)]()
 [![Grok-3-mini](https://img.shields.io/badge/LLM-Grok--3--mini-000000)]()
 [![Pydantic v2](https://img.shields.io/badge/Typing-Pydantic_v2-E92063)]()
+[![Redis](https://img.shields.io/badge/Cache-Redis-DC382D)]()
 [![Tests](https://img.shields.io/badge/Tests-19%2F19_passing-brightgreen)]()
 
 ---
@@ -53,7 +54,15 @@ Each scraped listing is classified into one of four categories (`EXACT`, `CLOSE`
 
 A **deterministic heuristic fallback** ensures the system operates without an API key, using keyword overlap and accessory keyword lists across Uzbek, Russian, and English.
 
-### 1.4 Connection to Active Research Areas
+### 1.4 Redis-Based Query Caching
+
+Repeated searches are served instantly from **Redis** without re-scraping all three marketplaces. On a cache miss the aggregated raw listings are stored with a configurable TTL (default 1 hour). The cache layer is **best-effort**: if Redis is unavailable, the system falls back to live scraping transparently with no errors surfaced to the user.
+
+- Cache key: SHA-256 hash of the raw query string
+- Cache scope: aggregated raw listings (before alignment/ranking for maximum reuse)
+- Silent fallback: all Redis errors are caught and logged without interrupting the pipeline
+
+### 1.5 Connection to Active Research Areas
 
 | Research Area | Relevance |
 |---|---|
@@ -79,20 +88,28 @@ A **deterministic heuristic fallback** ensures the system operates without an AP
                           │  │ (Grok-3-mini)  │   │
                           │  └───────┬────────┘   │
                           │          │             │
-                          │   asyncio.gather()     │
-                          │  ┌───────┼───────┐     │
-                          │  ▼       ▼       ▼     │
-                          │ Uzum  Asaxiy  Olcha    │
-                          │ Worker Worker Worker   │
-                          │ (React)(SSR)  (Nuxt)   │
-                          │  │       │       │     │
-                          │  └───────┼───────┘     │
-                          │          ▼             │
-                          │  ┌────────────────┐   │
-                          │  │ LLM Entity     │   │
-                          │  │ Alignment      │   │
-                          │  │ (per listing)  │   │
-                          │  └───────┬────────┘   │
+                          │  ┌───────▼────────┐   │
+                          │  │  Redis Cache   │   │
+                          │  │  (TTL-based)   │   │
+                          │  └──┬──────────┬──┘   │
+                          │  hit│          │miss  │
+                          │     │   asyncio.gather()
+                          │     │  ┌───────┼───────┐
+                          │     │  ▼       ▼       ▼
+                          │     │ Uzum  Asaxiy  Olcha
+                          │     │ Worker Worker Worker
+                          │     │ (React)(SSR)  (Nuxt)
+                          │     │  │       │       │
+                          │     │  └───────┼───────┘
+                          │     │          │store   │
+                          │     │  ┌───────▼────┐   │
+                          │     │  │ Cache SET  │   │
+                          │     │  └───────┬────┘   │
+                          │  ┌──▼──────────▼───┐   │
+                          │  │ LLM Entity      │   │
+                          │  │ Alignment       │   │
+                          │  │ (per listing)   │   │
+                          │  └───────┬─────────┘   │
                           │          ▼             │
                           │  ┌────────────────┐   │
                           │  │ Rank & Filter  │   │
@@ -112,7 +129,7 @@ A **deterministic heuristic fallback** ensures the system operates without an AP
 
 ```
 ├── agents/
-│   ├── master.py            # Orchestrator: parse → scrape → align → rank
+│   ├── master.py            # Orchestrator: parse → cache check → scrape → align → rank
 │   └── worker.py            # Per-marketplace autonomous worker
 ├── tools/
 │   ├── base.py              # ABC-enforced Playwright scraper interface
@@ -122,6 +139,7 @@ A **deterministic heuristic fallback** ensures the system operates without an AP
 ├── core/
 │   ├── models.py            # Pydantic v2 data models (strict typing)
 │   ├── config.py            # Centralized env-based configuration
+│   ├── cache.py             # Redis-based TTL caching (async, best-effort)
 │   ├── reasoning.py         # Grok-3-mini reasoning + heuristic fallback
 │   └── exceptions.py        # Custom AppException hierarchy
 ├── ui/
@@ -147,6 +165,7 @@ A **deterministic heuristic fallback** ensures the system operates without an AP
 
 - **macOS / Linux** (tested on Apple Silicon M4)
 - **Python 3.10+**
+- **Redis** (optional — system works without it, caching is silently skipped)
 - **xAI API key** (optional — heuristic mode works without it)
 
 ### Manual Setup
@@ -164,6 +183,20 @@ python -m playwright install chromium
 cp .env.example .env
 # Edit .env and set your XAI_API_KEY (optional)
 ```
+
+### Redis Setup (Optional)
+
+```bash
+# macOS
+brew install redis
+brew services start redis
+
+# Ubuntu / Debian
+sudo apt install redis-server
+sudo systemctl start redis
+```
+
+Redis runs on `localhost:6379` by default. No additional configuration needed — the agent connects automatically.
 
 ### Verify Installation
 
@@ -184,6 +217,14 @@ python main.py "Samsung Galaxy A33 5G 128GB"
 ```
 
 Output: structured log with ranked listings, confidence tags, prices, and direct links.
+
+### CLI Mode (Skip Cache)
+
+```bash
+python main.py --no-cache "Samsung Galaxy A33 5G 128GB"
+```
+
+Forces a fresh scrape from all marketplaces, ignoring any cached results.
 
 ### Web Interface
 
@@ -209,6 +250,8 @@ All settings are managed via `.env`:
 | `MAX_RESULTS_PER_SITE` | `15` | Max listings extracted per site |
 | `HEADLESS` | `true` | Run browsers headlessly |
 | `LLM_CONCURRENCY_LIMIT` | `10` | Max concurrent LLM API calls |
+| `REDIS_URL` | `redis://localhost:6379/0` | Redis connection URL |
+| `CACHE_TTL_SECONDS` | `3600` | Cache time-to-live in seconds (default 1 hour) |
 
 ---
 
@@ -223,6 +266,7 @@ All settings are managed via `.env`:
 | **Pinned dependencies** | Exact versions in `requirements.txt` for reproducibility |
 | **Pydantic v2** | Strict model validation with `computed_field` and `Field(...)` descriptors |
 | **Timezone-aware datetimes** | `datetime.now(timezone.utc)` — no deprecated `utcnow()` |
+| **Graceful degradation** | Redis and LLM failures fall back silently to non-cached / heuristic modes |
 
 ---
 
@@ -255,6 +299,7 @@ Every exception carries `message`, `detail`, and `context` fields for structured
 | Browser Automation | Playwright 1.58 | Async API, Chromium on ARM, reliable SPA handling |
 | LLM | xAI Grok-3-mini | Cost-effective reasoning, OpenAI-compatible SDK |
 | Data Validation | Pydantic v2 | Runtime type enforcement across pipeline |
+| Caching | Redis + aioredis | Async TTL-based caching with silent fallback |
 | Web Interface | Streamlit 1.54 | Rapid prototyping of research demos |
 | Configuration | python-dotenv | Environment-based configuration |
 
@@ -263,7 +308,6 @@ Every exception carries `message`, `detail`, and `context` fields for structured
 ## 10. Limitations and Future Work
 
 - **Anti-bot resilience**: Production deployment requires proxy rotation and browser fingerprint randomization.
-- **Caching layer**: Currently re-scrapes on every query; a TTL-based cache (Redis/SQLite) would reduce latency.
 - **Local LLM support**: Integration with Ollama or vLLM for fully offline operation.
 - **Marketplace expansion**: Mediapark.uz, Texnomart.uz, and cross-border platforms.
 - **Temporal analysis**: Storing results over time for price trend detection and arbitrage alerting.
@@ -277,4 +321,4 @@ MIT License
 
 ---
 
-Developed with ❤️ by [uzbtrust](https://github.com/uzbtrust)
+Developed by [uzbtrust](https://github.com/uzbtrust)
