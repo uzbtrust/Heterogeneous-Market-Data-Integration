@@ -97,8 +97,6 @@ def _t(key: str) -> str:
     return TEXTS[lang].get(key, key)
 
 
-# ── Sidebar ────────────────────────────────────────────────────
-
 with st.sidebar:
     if "lang" not in st.session_state:
         st.session_state.lang = "uz"
@@ -148,7 +146,6 @@ with st.sidebar:
     st.caption("Built for MBZUAI application")
 
 
-# ── Main content ───────────────────────────────────────────────
 
 st.title(_t("title"))
 st.caption(_t("subtitle"))
