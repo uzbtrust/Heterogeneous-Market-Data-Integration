@@ -35,26 +35,22 @@ def accessory_listing() -> ProductListing:
 
 class TestHeuristicQueryParsing:
 
-    @pytest.mark.asyncio
     async def test_parse_samsung(self, engine: ReasoningEngine) -> None:
         query = await engine.parse_query("Samsung Galaxy A33 5G 128GB")
         assert query.brand == "Samsung"
         assert query.storage_gb == 128
 
-    @pytest.mark.asyncio
     async def test_parse_xiaomi_with_ram(self, engine: ReasoningEngine) -> None:
         query = await engine.parse_query("Xiaomi Redmi Note 12 256GB 8GB")
         assert query.brand == "Xiaomi"
         assert query.storage_gb == 256
         assert query.ram_gb == 8
 
-    @pytest.mark.asyncio
     async def test_parse_unknown_brand(self, engine: ReasoningEngine) -> None:
         query = await engine.parse_query("random product 64GB")
         assert query.brand is None
         assert query.storage_gb == 64
 
-    @pytest.mark.asyncio
     async def test_parse_preserves_raw_query(self, engine: ReasoningEngine) -> None:
         raw: str = "iPhone 15 Pro Max 256GB"
         query = await engine.parse_query(raw)
@@ -63,7 +59,6 @@ class TestHeuristicQueryParsing:
 
 class TestHeuristicEntityAlignment:
 
-    @pytest.mark.asyncio
     async def test_exact_match(
         self, engine: ReasoningEngine, sample_listing: ProductListing,
     ) -> None:
@@ -72,7 +67,6 @@ class TestHeuristicEntityAlignment:
         assert match.confidence in (MatchConfidence.EXACT, MatchConfidence.CLOSE)
         assert match.relevance_score > 0.5
 
-    @pytest.mark.asyncio
     async def test_accessory_detection(
         self, engine: ReasoningEngine, accessory_listing: ProductListing,
     ) -> None:
@@ -81,7 +75,6 @@ class TestHeuristicEntityAlignment:
         assert match.confidence == MatchConfidence.ACCESSORY
         assert match.relevance_score < 0.5
 
-    @pytest.mark.asyncio
     async def test_unrelated_product(self, engine: ReasoningEngine) -> None:
         query = await engine.parse_query("Samsung Galaxy A33 5G 128GB")
         listing = ProductListing(
