@@ -106,7 +106,6 @@ class AsaxiyScraper(BaseScraper):
 
     @staticmethod
     def _parse_price(price_str: str) -> int | None:
-        # strip installment suffixes like "x 12 мес" before parsing
         clean: str = price_str.split("x")[0].split("\u00d7")[0]
         digits: str = re.sub(r"[^\d]", "", clean)
         return int(digits) if digits else None
