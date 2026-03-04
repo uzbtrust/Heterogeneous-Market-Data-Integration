@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import quote_plus
 
 from core.config import settings
@@ -105,6 +105,6 @@ class UzumScraper(BaseScraper):
         return listings
 
     @staticmethod
-    def _parse_price(price_str: str) -> Optional[int]:
+    def _parse_price(price_str: str) -> int | None:
         digits: str = re.sub(r"[^\d]", "", price_str)
         return int(digits) if digits else None

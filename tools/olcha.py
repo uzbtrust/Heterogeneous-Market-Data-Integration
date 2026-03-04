@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import quote_plus
 
 from core.config import settings
@@ -108,7 +108,7 @@ class OlchaScraper(BaseScraper):
         return listings
 
     @staticmethod
-    def _parse_price(price_str: str) -> Optional[int]:
+    def _parse_price(price_str: str) -> int | None:
         clean: str = price_str.split("x")[0].split("\u00d7")[0]
         digits: str = re.sub(r"[^\d]", "", clean)
         return int(digits) if digits else None
