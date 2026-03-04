@@ -8,3 +8,7 @@ last_result.json
 dist/
 build/
 .DS_Store
+.idea/
+.vscode/
+*.swp
+dump.rdb

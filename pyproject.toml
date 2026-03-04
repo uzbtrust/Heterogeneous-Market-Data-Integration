@@ -1,8 +1,10 @@
 [project]
 name = "uzmarket-intelligence-agent"
-version = "1.0.0"
+version = "1.1.0"
 description = "Autonomous multi-marketplace product search agent for Uzbekistan e-commerce"
 requires-python = ">=3.10"
+license = "MIT"
+keywords = ["e-commerce", "multi-agent", "web-scraping", "entity-resolution", "uzbekistan"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

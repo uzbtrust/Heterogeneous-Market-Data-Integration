@@ -119,15 +119,19 @@ with st.sidebar:
         │ Master Agent │
         │  (LLM Parse) │
         └──────┬──────┘
-               │ asyncio.gather()
-        ┌──────┼──────┐
-        ▼      ▼      ▼
-      Uzum  Asaxiy  Olcha
-      Worker Worker Worker
-        │      │      │
-        └──────┼──────┘
-               ▼
-        ┌─────────────┐
+               │
+        ┌──────▼──────┐
+        │ Redis Cache │
+        └──┬───────┬──┘
+        hit│       │miss
+           │  asyncio.gather()
+           │  ┌────┼────┐
+           │  ▼    ▼    ▼
+           │ Uzum Asax Olcha
+           │  │    │    │
+           │  └────┼────┘
+           │       │store
+        ┌──▼───────▼──┐
         │ LLM Entity  │
         │ Alignment   │
         └──────┬──────┘
