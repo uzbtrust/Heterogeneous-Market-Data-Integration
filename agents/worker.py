@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Type
 
 from core.exceptions import ScraperException
 from core.models import Marketplace, ProductListing
@@ -13,7 +12,7 @@ from tools.uzum import UzumScraper
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-_SCRAPER_REGISTRY: dict[Marketplace, Type[BaseScraper]] = {
+_SCRAPER_REGISTRY: dict[Marketplace, type[BaseScraper]] = {
     Marketplace.UZUM: UzumScraper,
     Marketplace.ASAXIY: AsaxiyScraper,
     Marketplace.OLCHA: OlchaScraper,
@@ -24,7 +23,7 @@ class WorkerAgent:
 
     def __init__(self, marketplace: Marketplace) -> None:
         self.marketplace: Marketplace = marketplace
-        self._scraper_cls: Type[BaseScraper] = _SCRAPER_REGISTRY[marketplace]
+        self._scraper_cls: type[BaseScraper] = _SCRAPER_REGISTRY[marketplace]
 
     def __repr__(self) -> str:
         return f"WorkerAgent(marketplace={self.marketplace.value})"
