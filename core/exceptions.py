@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 
 class AppException(Exception):
@@ -9,11 +9,11 @@ class AppException(Exception):
         self,
         message: str,
         *,
-        detail: Optional[str] = None,
-        context: Optional[dict[str, Any]] = None,
+        detail: str | None = None,
+        context: dict[str, Any] | None = None,
     ) -> None:
         self.message: str = message
-        self.detail: Optional[str] = detail
+        self.detail: str | None = detail
         self.context: dict[str, Any] = context or {}
         super().__init__(self.message)
 
@@ -27,7 +27,6 @@ class AppException(Exception):
         return " | ".join(parts)
 
 
-# ── Scraper layer ──────────────────────────────────────────────
 
 class ScraperException(AppException):
     pass
@@ -45,7 +44,6 @@ class MarketplaceUnavailable(ScraperException):
     pass
 
 
-# ── Reasoning layer ────────────────────────────────────────────
 
 class ReasoningException(AppException):
     pass
@@ -63,7 +61,6 @@ class QueryParseError(ReasoningException):
     pass
 
 
-# ── Pipeline layer ─────────────────────────────────────────────
 
 class PipelineException(AppException):
     pass
