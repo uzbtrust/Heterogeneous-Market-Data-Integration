@@ -321,4 +321,4 @@ MIT License
 
 ---
 
-Developed by [uzbtrust](https://github.com/uzbtrust)
+Developed with ❤️ by uzbtrust
